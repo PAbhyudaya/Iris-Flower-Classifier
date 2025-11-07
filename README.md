@@ -1,4 +1,4 @@
-
+<<<<<<< HEAD
 # Iris Flower Classifier - AI in Action 🌸
 
 An interactive Streamlit ML demo using the classic Iris dataset. This advanced version adds model tuning, metrics, a confusion matrix, feature importances, flexible plots, and batch predictions.
@@ -10,21 +10,21 @@ An interactive Streamlit ML demo using the classic Iris dataset. This advanced v
 - Confusion matrix heatmap (on test split) + classification report
 - Feature importances bar chart
 - Tabs for a clean UX:
-  - 🔮 Predict — sliders + instant prediction and class confidences
-  - 📚 Dataset — explore scatter plots with selectable axes
-  - 🧪 Model & Metrics — detailed metrics, confusion matrix, importances
-  - 📦 Batch Predict — upload CSV, get predictions and download results
+	- 🔮 Predict — sliders + instant prediction and class confidences
+	- 📚 Dataset — explore scatter plots with selectable axes
+	- 🧪 Model & Metrics — detailed metrics, confusion matrix, importances
+	- 📦 Batch Predict — upload CSV, get predictions and download results
 - Big, bold result box by species color:
-  - Green = Setosa, Blue = Versicolor, Purple = Virginica
+	- Green = Setosa, Blue = Versicolor, Purple = Virginica
 - Footer: “Built with Streamlit & scikit-learn”
 
 ## Project structure
 - `app.py` — Streamlit application (imports from `src/iris_app`)
 - `src/iris_app/` — Modular package
-  - `data.py` — dataset loading
-  - `model.py` — training, evaluation, cross-validation helpers
-  - `viz.py` — Plotly figure builders (scatter, confusion matrix, importances)
-  - `__init__.py` — package metadata
+	- `data.py` — dataset loading
+	- `model.py` — training, evaluation, cross-validation helpers
+	- `viz.py` — Plotly figure builders (scatter, confusion matrix, importances)
+	- `__init__.py` — package metadata
 - `cli.py` — Command-line batch predictions
 - `tests/` — Minimal unit tests (optional for devs)
 - `requirements.txt` — Runtime dependencies
@@ -90,6 +90,7 @@ Expected result:
 
 ## License
 This example is provided for learning and demonstration purposes.
-
+=======
 # Iris-Flower-Classifier
 An upgraded Streamlit web app for the classic Iris dataset
+>>>>>>> 9be485da62ab72673167048160c7b2265ee4b0d4
