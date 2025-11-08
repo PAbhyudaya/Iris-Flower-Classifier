@@ -40,7 +40,7 @@ from iris_app.viz import (
 # Expecting images under ./img with filenames matching these mappings.
 IMG_DIR = ROOT / "img"
 SPECIES_IMAGE_MAP = {
-	"setosa": IMG_DIR / "Iris_Setosa.jpeg",
+	"setosa": IMG_DIR / "Iris_Setosa.jpg",
 	"versicolor": IMG_DIR / "Iris_Versicolor.jpg",
 	"virginica": IMG_DIR / "iris_virginica.jpg",
 }
