@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Iris Flower Classifier - AI in Action 🌸
 
 An interactive Streamlit ML demo using the classic Iris dataset. This advanced version adds model tuning, metrics, a confusion matrix, feature importances, flexible plots, and batch predictions.
@@ -90,7 +89,3 @@ Expected result:
 
 ## License
 This example is provided for learning and demonstration purposes.
-=======
-# Iris-Flower-Classifier
-An upgraded Streamlit web app for the classic Iris dataset
->>>>>>> 9be485da62ab72673167048160c7b2265ee4b0d4
