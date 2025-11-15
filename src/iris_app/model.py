@@ -1,7 +1,4 @@
-"""Model utilities for the Iris app.
-
-Encapsulates training, prediction, and evaluation using scikit-learn.
-"""
+from __future__ import annotations
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -28,14 +25,9 @@ class IrisModel:
         bootstrap: bool = False,
         random_state: int = 42,
     ) -> Tuple["IrisModel", np.ndarray, np.ndarray]:
-        """Train a RandomForestClassifier on the full Iris dataset.
-
-        Returns the model and the full X, y arrays for downstream metrics.
-        """
         iris = datasets.load_iris()
         X = iris.data
         y = iris.target
-
         model = RandomForestClassifier(
             n_estimators=n_estimators,
             max_depth=max_depth,

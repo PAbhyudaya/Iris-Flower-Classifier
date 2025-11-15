@@ -1,12 +1,4 @@
-"""Command-line batch prediction for the Iris model.
-
-Usage:
-  python cli.py --input path/to/input.csv --output predictions.csv \
-    --n-estimators 100 --max-depth 5 --max-features sqrt --bootstrap
-
-Only runtime deps: pandas, scikit-learn. Uses the same feature columns and species labels
-as the Streamlit app. No external config file required.
-"""
+from __future__ import annotations
 from __future__ import annotations
 
 import argparse
@@ -15,7 +7,6 @@ from pathlib import Path
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 
-# Local imports
 ROOT = Path(__file__).parent
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
@@ -28,7 +19,6 @@ def build_model(args) -> RandomForestClassifier:
     df, feature_names, _ = load_iris_df()
     X = df[feature_names].values
     y = df["target"].values
-
     model = RandomForestClassifier(
         n_estimators=args.n_estimators,
         max_depth=args.max_depth,

@@ -132,33 +132,46 @@ df, FEATURE_NAMES, TARGET_NAMES, iris_raw = load_data()
 
 
 # Model hyperparameters (fixed, not interactive)
-n_estimators = 100
-max_depth = None
-max_features = None
-bootstrap = False
+
+# Match run_no_ui.py settings
+n_estimators = 50
+max_depth = 2
+max_features = "sqrt"
+bootstrap = True
+class_weight = "balanced"
 test_size = 0.2
 
 # Train with current settings
-model, X_all, y_all = train_model(
+df, FEATURE_NAMES, TARGET_NAMES, iris_raw = load_data()
+X_all = df[FEATURE_NAMES].values
+y_all = df["target"].values
+X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=test_size, random_state=42, stratify=y_all)
+model = RandomForestClassifier(
 	n_estimators=n_estimators,
 	max_depth=max_depth,
 	max_features=max_features,
 	bootstrap=bootstrap,
+	class_weight=class_weight,
 	random_state=42,
 )
+model.fit(X_train, y_train)
 
 # Metrics: train/test split and CV
-X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=test_size, random_state=42, stratify=y_all)
 train_acc = model.score(X_train, y_train)
 test_acc = model.score(X_test, y_test)
+
+# 5x5 repeated stratified CV
+from sklearn.model_selection import RepeatedStratifiedKFold
+rskf = RepeatedStratifiedKFold(n_splits=5, n_repeats=5, random_state=42)
 cv_model = RandomForestClassifier(
 	n_estimators=n_estimators,
 	max_depth=max_depth,
 	max_features=max_features,
 	bootstrap=bootstrap,
+	class_weight=class_weight,
 	random_state=42,
 )
-cv_scores = cross_val_score(cv_model, X_all, y_all, cv=5)
+cv_scores = cross_val_score(cv_model, X_all, y_all, cv=rskf)
 
 col_a, col_b, col_c = st.columns(3)
 col_a.metric("Train Accuracy", f"{train_acc*100:.0f}%")
@@ -215,7 +228,7 @@ with tab_predict:
 	for i, name in enumerate(TARGET_NAMES):
 		pct = int(round(proba[i] * 100))
 		st.write(f"{name.title()} — {pct}%")
-		st.progress(pct, text=None)
+		st.progress(pct)
 
 # ---- Dataset Tab ----
 with tab_dataset:
@@ -247,13 +260,13 @@ with tab_dataset:
 with tab_model:
 	st.subheader("Metrics & Insights 📈")
 
-	# Confusion Matrix (test split)
-	y_pred_test = model.predict(X_test)
-	cm = confusion_matrix(y_test, y_pred_test, labels=[0, 1, 2])
+	# Confusion Matrix (full dataset, matching run_no_ui.py)
+	y_pred_full = model.predict(X_all)
+	cm = confusion_matrix(y_all, y_pred_full, labels=[0, 1, 2])
 	cm_df = pd.DataFrame(cm, index=[n.title() for n in TARGET_NAMES], columns=[n.title() for n in TARGET_NAMES])
 	cm_fig = px.imshow(cm_df, text_auto=True, color_continuous_scale="Blues",
 					   labels=dict(x="Predicted", y="Actual", color="Count"),
-					   title="Confusion Matrix (Test Set)")
+					   title="Confusion Matrix (Full Dataset)")
 	cm_fig.update_layout(margin=dict(l=10, r=10, t=50, b=10))
 	st.plotly_chart(cm_fig, use_container_width=True)
 
@@ -267,9 +280,9 @@ with tab_model:
 					 color="feature", color_discrete_sequence=px.colors.qualitative.Set2)
 	st.plotly_chart(imp_fig, use_container_width=True)
 
-	# Classification report
+	# Classification report (full dataset, matching run_no_ui.py)
 	st.subheader("Classification report 🧾")
-	report = classification_report(y_test, y_pred_test, target_names=[n.title() for n in TARGET_NAMES])
+	report = classification_report(y_all, y_pred_full, target_names=[n.title() for n in TARGET_NAMES])
 	st.code(report, language="text")
 
 # ---- Batch Predict Tab ----
@@ -300,8 +313,85 @@ with tab_batch:
 				st.success("Predictions ready!")
 				st.dataframe(result.head(20), use_container_width=True)
 
+				# Prepare CSV and PDF bytes
 				csv_bytes = result.to_csv(index=False).encode("utf-8")
-				st.download_button("Download predictions as CSV", data=csv_bytes, file_name="iris_predictions.csv", mime="text/csv")
+				from fpdf import FPDF
+				import tempfile
+				def df_to_pdf(dataframe):
+					pdf = FPDF(orientation='L')
+					pdf.add_page()
+					pdf.set_font("Arial", size=10)
+					pdf.cell(0, 10, txt="Iris Batch Predictions", ln=True, align="C")
+					pdf.ln(6)
+					page_width = pdf.w - 2 * pdf.l_margin
+					col_width = page_width / len(dataframe.columns)
+					for col in dataframe.columns:
+						pdf.cell(col_width, 10, col, border=1)
+					pdf.ln()
+					for i, row in dataframe.iterrows():
+						for col, item in zip(dataframe.columns, row):
+							if col.startswith('prob_'):
+								cell_val = f"{item:.2f}"
+							else:
+								cell_val = str(item)
+							pdf.cell(col_width, 10, cell_val, border=1)
+						pdf.ln()
+					tmp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+					pdf.output(tmp_pdf.name)
+					tmp_pdf.seek(0)
+					return tmp_pdf.read()
+				pdf_bytes = df_to_pdf(result)
+
+				# Show CSV and PDF download buttons side by side
+				col_csv, col_pdf = st.columns(2)
+				with col_csv:
+					st.download_button("Download predictions as CSV", data=csv_bytes, file_name="iris_predictions.csv", mime="text/csv")
+				with col_pdf:
+					st.download_button("Download predictions as PDF", data=pdf_bytes, file_name="iris_predictions.pdf", mime="application/pdf")
+
+from fpdf import FPDF
+import tempfile
+
+if st.session_state.get("batch_results") is not None:
+    batch_df = st.session_state["batch_results"]
+
+
+	# PDF download button (new)
+    def df_to_pdf(dataframe):
+        pdf = FPDF(orientation='L')
+        pdf.add_page()
+        pdf.set_font("Arial", size=10)
+        pdf.cell(0, 10, txt="Iris Batch Predictions", ln=True, align="C")
+        pdf.ln(6)
+        # Table header
+        page_width = pdf.w - 2 * pdf.l_margin
+        col_width = page_width / len(dataframe.columns)
+        for col in dataframe.columns:
+            pdf.cell(col_width, 10, col, border=1)
+        pdf.ln()
+        # Table rows
+        for i, row in dataframe.iterrows():
+            for col, item in zip(dataframe.columns, row):
+                # Format probability columns to 2 decimals
+                if col.startswith('prob_'):
+                    cell_val = f"{item:.2f}"
+                else:
+                    cell_val = str(item)
+                pdf.cell(col_width, 10, cell_val, border=1)
+            pdf.ln()
+        # Save to temp file
+        tmp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+        pdf.output(tmp_pdf.name)
+        tmp_pdf.seek(0)
+        return tmp_pdf.read()
+
+    pdf_bytes = df_to_pdf(batch_df)
+    st.download_button(
+        "Download predictions as PDF",
+        pdf_bytes,
+        "iris_batch_predictions.pdf",
+        "application/pdf",
+    )
 
 st.write("\n")
 st.markdown("<hr>", unsafe_allow_html=True)
