@@ -41,8 +41,8 @@ def main():
     )
 
     model = RandomForestClassifier(
-        n_estimators=200,
-        max_depth=3,
+        n_estimators=50,
+        max_depth=2,
         max_features="sqrt",
         bootstrap=True,
         class_weight="balanced",
@@ -56,8 +56,8 @@ def main():
     rskf = RepeatedStratifiedKFold(n_splits=5, n_repeats=5, random_state=42)
     cv_scores = cross_val_score(
         RandomForestClassifier(
-            n_estimators=200,
-            max_depth=3,
+            n_estimators=50,
+            max_depth=2,
             max_features="sqrt",
             bootstrap=True,
             class_weight="balanced",
@@ -88,8 +88,19 @@ def main():
     print()
     print_confusion_matrix(cm_full, [n.title() for n in target_names])
     print()
+
     print("Classification report:")
     print(report_full)
+
+    # New data for prediction
+    X_new = np.array([
+        [3, 2, 1, 0.2],
+        [4.9, 2.2, 3.8, 1.1],
+        [5.3, 2.5, 4.6, 1.9]
+    ])
+    predicted_sizes = model.predict(X_new)
+    print("\nPredictions for new data:")
+    print(predicted_sizes)
 
 
 if __name__ == "__main__":
